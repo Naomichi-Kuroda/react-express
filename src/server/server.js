@@ -16,3 +16,33 @@ app.get('*', function (req, res) {
 app.listen(3000, ()=> {
   console.log('server running')
 })
+
+app.get('/api/adduser', (req, res) => {
+  const userid = req.query.userid
+  const passwd = req.query.passwd
+  if (userid === '' || passwd === '') {
+    return res.json({status: false, msg: '入力項目が空です'})
+  }
+  db.getUser(userid, (user) => {
+    if (user) {
+      return res.json({status: false, msg: '既にユーザーが存在しています'})
+    }
+    db.addUser(userid, passwd, (token) => {
+      if (!token) {
+        res.json({status: false, msg: 'データベースエラー'})
+      }
+      res.json({status: true, token})
+    })
+  })
+})
+app.get('/api/login', (req, res) => {
+  const userid = req.query.userid
+  const passwd = req.query.passwd
+  db.login(userid, passwd, (err, token) => {
+    if (err) {
+      res.json({status: false, msg: 'ログインに失敗しました'})
+      return
+    }
+    res.json({status: true, token})
+  })
+})
